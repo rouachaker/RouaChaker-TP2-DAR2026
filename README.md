@@ -121,6 +121,7 @@ Le serveur attend la connexion du client à l'aide de la méthode accept().
 
 Après la connexion, il reçoit l'objet envoyé par le client en utilisant ObjectInputStream et la méthode readObject().
 ![img.png](cap/2.3.png)
+
 d) Récupération des données
 
 Le serveur récupère les informations de l'objet grâce aux méthodes getOperande1(), getOperateur() et getOperande2().
@@ -150,10 +151,8 @@ Affichage côté serveur :
 ![](cap/serv.png)
 
 
-Capture 5 : Résultat d'exécution du client
 ![img_2.png](cap/resc.png)
 
-Capture 6 : Résultat d'exécution du serveur
 ![img_4.png](cap/resser.png)
 
 ### Conclusion
