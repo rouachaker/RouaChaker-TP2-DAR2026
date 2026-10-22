@@ -1,53 +1,49 @@
 package client;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Scanner;
-import java.util.regex.Pattern;
-
+import operation.*;
 public class client {
 
     public static void main(String[] args) {
 
-        String adresseServeur = "localhost";
-        int port = 5000;
-
-        Scanner scanner = new Scanner(System.in);
-
         try {
-            System.out.println("Connexion au serveur...");
-            Socket socket = new Socket(adresseServeur, port);
-            System.out.println("Connecté au serveur.");
+            Socket socket = new Socket("localhost", 5000);
 
-            PrintWriter sortie = new PrintWriter(socket.getOutputStream(), true);
+            Scanner scanner = new Scanner(System.in);
 
-            BufferedReader entree = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            System.out.print("Entrez une opération (exemple : 55 * 25) : ");
-            String operation = scanner.nextLine();
+            System.out.print("Donner le premier opérande : ");
+            double operande1 = scanner.nextDouble();
 
-            String regex = "^\\s*-?\\d+\\s*[+\\-*/]\\s*-?\\d+\\s*$";
+            System.out.print("Donner l'opérateur (+, -, *, /) : ");
+            String operateur = scanner.next();
 
-            if (!Pattern.matches(regex, operation)) {
+            System.out.print("Donner le deuxième opérande : ");
+            double operande2 = scanner.nextDouble();
 
-                System.out.println("Erreur : syntaxe incorrecte.");
-                System.out.println("Exemple correct : 55 * 25");
+            operation operation = new operation(operande1, operateur, operande2);
 
-                socket.close();
-                scanner.close();
+            ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
 
-                return;
-            }
-            sortie.println(operation);
-            System.out.println("Opération envoyée au serveur.");
-            String resultat = entree.readLine();
+            ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+
+            output.writeObject(operation);
+            output.flush();
+
+            System.out.println("Objet envoyé au serveur.");
+
+            Double resultat = (Double) input.readObject();
+
             System.out.println("Résultat reçu : " + resultat);
 
+            input.close();
+            output.close();
             socket.close();
             scanner.close();
 
         } catch (Exception e) {
-            System.out.println("Erreur client : " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

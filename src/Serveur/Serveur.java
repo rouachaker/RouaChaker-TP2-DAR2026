@@ -1,72 +1,88 @@
 package Serveur;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import operation.*;
+import client.*;
 
-public class Serveur{
+public class Serveur {
 
     public static void main(String[] args) {
 
-        int port = 5000;
-
         try {
-            ServerSocket serverSocket = new ServerSocket(port);
+            ServerSocket serverSocket = new ServerSocket(5000);
+
             System.out.println("Serveur démarré...");
-            System.out.println("En attente d'un client sur le port " + port + "...");
+            System.out.println("En attente d'un client...");
 
             Socket socket = serverSocket.accept();
 
             System.out.println("Client connecté.");
 
-            BufferedReader entree = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter sortie = new PrintWriter(socket.getOutputStream(), true);
-            String operation = entree.readLine();
-            System.out.println("Opération reçue : " + operation);
-            String resultat = calculer(operation);
-            sortie.println(resultat);
+            ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
+
+            ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
+
+            operation operation = (operation) input.readObject();
+
+            System.out.println("Objet reçu :");
+            System.out.println(
+                    operation.getOperande1() + " "
+                            + operation.getOperateur() + " "
+                            + operation.getOperande2()
+            );
+
+            double resultat = 0;
+
+            switch (operation.getOperateur()) {
+
+                case "+":
+                    resultat =
+                            operation.getOperande1()
+                                    + operation.getOperande2();
+                    break;
+
+                case "-":
+                    resultat =
+                            operation.getOperande1()
+                                    - operation.getOperande2();
+                    break;
+
+                case "*":
+                    resultat =
+                            operation.getOperande1()
+                                    * operation.getOperande2();
+                    break;
+
+                case "/":
+
+                    if (operation.getOperande2() != 0) {
+                        resultat =
+                                operation.getOperande1()
+                                        / operation.getOperande2();
+                    } else {
+                        System.out.println("Division par zéro impossible.");
+                    }
+
+                    break;
+
+                default:
+                    System.out.println("Opérateur invalide.");
+            }
+
+            output.writeObject(resultat);
+            output.flush();
+
             System.out.println("Résultat envoyé : " + resultat);
+
+            input.close();
+            output.close();
             socket.close();
             serverSocket.close();
+
         } catch (Exception e) {
-            System.out.println("Erreur serveur : " + e.getMessage());
-        }
-    }
-    public static String calculer(String operation) {Pattern pattern = Pattern.compile("^\\s*(-?\\d+)\\s*([+\\-*/])\\s*(-?\\d+)\\s*$");
-        Matcher matcher = pattern.matcher(operation);
-        if (!matcher.matches()) {
-            return "Erreur : opération invalide";
-        }
-        int operande1 = Integer.parseInt(matcher.group(1));
-        String operateur = matcher.group(2);
-        int operande2 = Integer.parseInt(matcher.group(3));
-
-        switch (operateur) {
-
-            case "+":
-                return String.valueOf(operande1 + operande2);
-
-            case "-":
-                return String.valueOf(operande1 - operande2);
-
-            case "*":
-                return String.valueOf(operande1 * operande2);
-
-            case "/":
-
-                if (operande2 == 0) {
-                    return "Erreur : division par zéro";
-                }
-
-                return String.valueOf(
-                        (double) operande1 / operande2
-                );
-
-            default:
-                return "Erreur : opérateur inconnu";
+            e.printStackTrace();
         }
     }
 }
